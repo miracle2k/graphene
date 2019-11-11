@@ -1,11 +1,31 @@
+import ast
+import codecs
+import re
 import sys
 
 from setuptools import find_packages, setup
 from setuptools.command.test import test as TestCommand
 
+_version_re = re.compile(r"VERSION\s+=\s+(.*)")
+
+with open("graphene/__init__.py", "rb") as f:
+    version = ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1))
+
+path_copy = sys.path[:]
+
+sys.path.append("graphene")
+try:
+    from pyutils.version import get_version
+
+    version = get_version(version)
+except Exception:
+    version = ".".join([str(v) for v in version])
+
+sys.path[:] = path_copy
+
 
 class PyTest(TestCommand):
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+    user_options = [("pytest-args=", "a", "Arguments to pass to py.test")]
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
@@ -19,64 +39,52 @@ class PyTest(TestCommand):
     def run_tests(self):
         # import here, cause outside the eggs aren't loaded
         import pytest
+
         errno = pytest.main(self.pytest_args)
         sys.exit(errno)
 
+
+tests_require = [
+    "pytest",
+    "pytest-benchmark",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-asyncio",
+    "snapshottest",
+    "coveralls",
+    "promise",
+    "six",
+    "mock",
+    "pytz",
+    "iso8601",
+]
+
 setup(
-    name='graphene',
-    version='0.7.3',
-
-    description='GraphQL Framework for Python',
-    long_description=open('README.rst').read(),
-
-    url='https://github.com/graphql-python/graphene',
-
-    author='Syrus Akbary',
-    author_email='me@syrusakbary.com',
-
-    license='MIT',
-
+    name="graphene",
+    version=version,
+    description="GraphQL Framework for Python",
+    long_description=codecs.open(
+        "README.rst", "r", encoding="ascii", errors="replace"
+    ).read(),
+    url="https://github.com/graphql-python/graphene",
+    author="Syrus Akbary",
+    author_email="me@syrusakbary.com",
+    license="MIT",
     classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Intended Audience :: Developers',
-        'Topic :: Software Development :: Libraries',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: Implementation :: PyPy',
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Libraries",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
     ],
-
-    keywords='api graphql protocol rest relay graphene',
-
-    packages=find_packages(exclude=['tests']),
-
+    keywords="api graphql protocol rest relay graphene",
+    packages=find_packages(exclude=["tests", "tests.*", "examples"]),
     install_requires=[
-        'six>=1.10.0',
-        'graphql-core>=0.4.9',
-        'graphql-relay==0.3.3',
+        "graphql-core>=3.0.0a0,<4",
+        "graphql-relay>=3.0.0a0,<4",
+        "aniso8601>=6,<8",
     ],
-    tests_require=[
-        'django-filter>=0.10.0',
-        'pytest>=2.7.2',
-        'pytest-django',
-        'sqlalchemy',
-        'sqlalchemy_utils',
-        'mock',
-    ],
-    extras_require={
-        'django': [
-            'Django>=1.6.0',
-            'singledispatch>=3.4.0.3',
-            'graphql-django-view>=1.1.0',
-        ],
-        'sqlalchemy': [
-            'sqlalchemy',
-            'singledispatch>=3.4.0.3',
-        ]
-    },
-
-    cmdclass={'test': PyTest},
+    tests_require=tests_require,
+    extras_require={"test": tests_require},
+    cmdclass={"test": PyTest},
 )
