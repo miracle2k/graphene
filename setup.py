@@ -61,7 +61,7 @@ tests_require = [
 
 setup(
     name="graphene",
-    version=version,
+    version="3.0.2",
     description="GraphQL Framework for Python",
     long_description=codecs.open(
         "README.rst", "r", encoding="ascii", errors="replace"
