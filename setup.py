@@ -6,20 +6,8 @@ import sys
 from setuptools import find_packages, setup
 from setuptools.command.test import test as TestCommand
 
-_version_re = re.compile(r"VERSION\s+=\s+(.*)")
-
-with open("graphene/__init__.py", "rb") as f:
-    version = ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1))
-
 path_copy = sys.path[:]
 
-sys.path.append("graphene")
-try:
-    from pyutils.version import get_version
-
-    version = get_version(version)
-except Exception:
-    version = ".".join([str(v) for v in version])
 
 sys.path[:] = path_copy
 
